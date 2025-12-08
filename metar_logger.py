@@ -1,58 +1,29 @@
 import requests
+import csv
 from datetime import datetime
-import os
-import sys
 
-# ---------------- CONFIG ----------------
-URL = "https://aviationweather.gov/api/data/metar?ids=WSSS&format=raw"
 CSV_FILE = "metar_history_wsss.csv"
-# ----------------------------------------
+URL = "https://aviationweather.gov/api/data/metar?ids=WSSS&format=raw"
 
 def fetch_metar():
-    """Fetch latest METAR from aviationweather.gov API."""
-    try:
-        r = requests.get(URL, timeout=10)
-        if r.status_code == 200:
-            return r.text.strip()
-        print(f"Failed to fetch METAR: HTTP {r.status_code}")
-        return None
-    except Exception as e:
-        print(f"Error fetching METAR: {e}")
+    r = requests.get(URL)
+    if r.status_code == 200:
+        metar = r.text.strip()
+        print("Fetched METAR:", metar)
+        return metar
+    else:
+        print("Failed to fetch METAR:", r.status_code)
         return None
 
 def append_metar(metar):
-    """Append METAR to CSV if it's not a duplicate. Return True if new METAR added."""
-    if metar is None:
-        return None
-
+    if not metar:
+        return False
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-
-    # Create CSV if it doesn't exist
-    if not os.path.exists(CSV_FILE):
-        with open(CSV_FILE, "w") as f:
-            f.write("timestamp,metar\n")
-
-    # Avoid duplicates
-    with open(CSV_FILE, "r") as f:
-        existing = f.read().splitlines()
-    if any(metar in line for line in existing):
-        print("Duplicate METAR — skipped")
-        return None  # Nothing appended
-
-    # Append new METAR
     with open(CSV_FILE, "a") as f:
         f.write(f"{timestamp},{metar}\n")
-    print("Saved METAR:", metar)
-    return True  # New METAR appended
+    print("Appended to CSV")
+    return True
 
-    if __name__ == "__main__":
-        metar = fetch_metar()
-        appended = append_metar(metar)
-    
-        if appended:
-            print("New METAR appended — ready to commit.")
-        else:
-            print("No new METAR — nothing to commit.")
-    
-        # Always exit 0 so GitHub Actions doesn't mark as failure
-        sys.exit(0)
+if __name__ == "__main__":
+    metar = fetch_metar()
+    append_metar(metar)
