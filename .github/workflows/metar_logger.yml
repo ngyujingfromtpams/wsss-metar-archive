@@ -1,10 +1,12 @@
 name: METAR Logger
 
-# Run every 10 minutes and allow manual trigger
 on:
   schedule:
     - cron: "*/10 * * * *"
   workflow_dispatch:
+
+permissions:
+  contents: write   # IMPORTANT – allows pushing
 
 jobs:
   fetch-metar:
@@ -13,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          persist-credentials: true  # allow push using GITHUB_TOKEN
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -25,7 +29,7 @@ jobs:
       - name: Run METAR logger
         id: metar
         run: python metar_logger.py
-        continue-on-error: true
+        continue-on-error: true     # exit code 1 → failure()
 
       - name: Commit updated CSV if new METAR
         if: ${{ steps.metar.outcome == 'failure' }}
