@@ -1,0 +1,32 @@
+name: Daily METAR Archive Release
+
+on:
+  schedule:
+    - cron: "0 16 * * *"   # 00:00 SGT (16:00 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Prepare release file
+        run: |
+          DATE=$(date -u +"%Y-%m-%d")
+          cp metar_history_wsss.csv "wsss-metar-$DATE.csv"
+          echo "FILENAME=wsss-metar-$DATE.csv" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "daily-${{ env.DATE }}"
+          name: "Daily METAR Archive – ${{ env.DATE }}"
+          files: ${{ env.FILENAME }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
