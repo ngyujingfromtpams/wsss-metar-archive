@@ -28,11 +28,12 @@ jobs:
           # Check if CSV file changed
           git status --porcelain
 
-      - name: Commit updated CSV (if changed)
-        if: steps.metar.outputs.csv_changed == 'true'
+      - name: Commit updated CSV
+        if: ${{ failure() }}  # only if metar_logger.py exited with 1
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add metar_history_wsss.csv
           git commit -m "Update METAR history"
           git push
+      
