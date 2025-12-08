@@ -1,4 +1,4 @@
-name: METAR Fetcher
+name: METAR Logger
 
 # Run every 10 minutes and allow manual trigger
 on:
