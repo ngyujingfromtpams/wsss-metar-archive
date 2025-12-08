@@ -1,6 +1,4 @@
 name: Run METAR logger
-run: python metar_logger.py
-
 
 on:
   schedule:
