@@ -1,6 +1,7 @@
 import requests
 from datetime import datetime
 import os
+import sys
 
 # METAR API URL for WSSS
 URL = "https://aviationweather.gov/api/data/metar?ids=WSSS&format=raw"
@@ -19,7 +20,7 @@ def fetch_metar():
 
 def append_metar(metar):
     if metar is None:
-        return
+        return None
 
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 
@@ -29,8 +30,16 @@ def append_metar(metar):
             existing = f.read().splitlines()
         if any(metar in line for line in existing):
             print("Duplicate METAR — skipped")
-            return
+            return None  # nothing appended
 
     with open(CSV_FILE, "a") as f:
         f.write(f"{timestamp},{metar}\n")
     print("Saved METAR:", metar)
+    return True  # new METAR appended
+
+if __name__ == "__main__":
+    metar = fetch_metar()
+    appended = append_metar(metar)
+    # Exit code 1 = new METAR appended, 0 = nothing appended
+    sys.exit(1 if appended else 0)
+
