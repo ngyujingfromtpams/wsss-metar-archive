@@ -45,8 +45,14 @@ def append_metar(metar):
     print("Saved METAR:", metar)
     return True  # New METAR appended
 
-if __name__ == "__main__":
-    metar = fetch_metar()
-    appended = append_metar(metar)
-    # Exit code 1 = new METAR appended, 0 = nothing appended
-    sys.exit(1 if appended else 0)
+    if __name__ == "__main__":
+        metar = fetch_metar()
+        appended = append_metar(metar)
+    
+        if appended:
+            print("New METAR appended — ready to commit.")
+        else:
+            print("No new METAR — nothing to commit.")
+    
+        # Always exit 0 so GitHub Actions doesn't mark as failure
+        sys.exit(0)
