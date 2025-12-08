@@ -1,10 +1,9 @@
 name: METAR Fetcher
 
-# Trigger workflow every 10 minutes
 on:
   schedule:
-    - cron: "*/10 * * * *"
-  workflow_dispatch: # Allows manual trigger
+    - cron: "*/10 * * * *"  # every 10 minutes
+  workflow_dispatch:  # allows manual run
 
 jobs:
   fetch-metar:
@@ -23,12 +22,17 @@ jobs:
         run: pip install requests
 
       - name: Run METAR logger
-        run: python metar_logger.py
+        id: metar
+        run: |
+          python metar_logger.py
+          # Check if CSV file changed
+          git status --porcelain
 
-      - name: Commit updated CSV
+      - name: Commit updated CSV (if changed)
+        if: steps.metar.outputs.csv_changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add metar_history_wsss.csv
-          git commit -m "Update METAR history" || echo "No changes to commit"
+          git commit -m "Update METAR history"
           git push
