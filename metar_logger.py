@@ -38,8 +38,9 @@ def append_metar(metar):
     return True  # new METAR appended
 
 if __name__ == "__main__":
-    metar = fetch_metar()
-    appended = append_metar(metar)
-    # Exit code 1 = new METAR appended, 0 = nothing appended
+    metar = fetch_metar()         # Fetch the latest METAR
+    appended = append_metar(metar)  # Try to append it to CSV
+    import sys
+    # Exit code 1 if new METAR appended, 0 if nothing added
     sys.exit(1 if appended else 0)
 
