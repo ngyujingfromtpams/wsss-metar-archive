@@ -1,44 +1,37 @@
-import requests
-from datetime import datetime
-import os
-import sys
+name: METAR Fetcher
 
-# METAR API URL for WSSS
-URL = "https://aviationweather.gov/api/data/metar?ids=WSSS&format=raw"
+# Run every 10 minutes and allow manual trigger
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
 
-# File to store METAR
-CSV_FILE = "metar_history_wsss.csv"
+jobs:
+  fetch-metar:
+    runs-on: ubuntu-latest
 
-def fetch_metar():
-    try:
-        r = requests.get(URL, timeout=10)
-        if r.status_code == 200:
-            return r.text.strip()
-        return None
-    except:
-        return None
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-def append_metar(metar):
-    if metar is None:
-        return None
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
 
-    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+      - name: Install dependencies
+        run: pip install requests
 
-    # Avoid duplicates
-    if os.path.exists(CSV_FILE):
-        with open(CSV_FILE, "r") as f:
-            existing = f.read().splitlines()
-        if any(metar in line for line in existing):
-            print("Duplicate METAR — skipped")
-            return None  # nothing appended
+      - name: Run METAR logger
+        id: metar
+        run: python metar_logger.py
+        continue-on-error: true
 
-    with open(CSV_FILE, "a") as f:
-        f.write(f"{timestamp},{metar}\n")
-    print("Saved METAR:", metar)
-    return True  # new METAR appended
-
-if __name__ == "__main__":
-    metar = fetch_metar()
-    appended = append_metar(metar)
-    # Exit code 1 = new METAR appended, 0 = nothing appended
-    sys.exit(1 if appended else 0)
+      - name: Commit updated CSV if new METAR
+        if: ${{ steps.metar.outcome == 'failure' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add metar_history_wsss.csv
+          git commit -m "Update METAR history"
+          git push
