@@ -1,4 +1,4 @@
-name: Run METAR logger
+name: METAR logger
 
 on:
   schedule:
